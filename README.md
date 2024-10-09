@@ -1,16 +1,18 @@
 # Cryptirust
 [![Crates.io][crates-badge]][crates-url]
 [![MIT licensed][mit-badge]][mit-url]
-[![Build Status](ci-badge)](ci-yml)
+[![Build Status][ci-badge]][ci-url]
+[![API Docs][docs-badge]][docs-url]
 
 [crates-badge]: https://img.shields.io/crates/v/cryptirust.svg
 [crates-url]: https://crates.io/crates/cryptirust
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [mit-url]: https://github.com/francescoalemanno/cryptirust/blob/master/LICENSE
 [ci-badge]: https://github.com/francescoalemanno/cryptirust/actions/workflows/rust.yml/badge.svg?branch=master
-[ci-yml]: https://github.com/francescoalemanno/cryptirust/actions/workflows/rust.yml
+[ci-url]: https://github.com/francescoalemanno/cryptirust/actions/workflows/rust.yml
+[docs-badge]: https://img.shields.io/badge/API-Docs-blue
+[docs-url]: https://docs.rs/cryptirust/latest/cryptirust
 
-[API Docs](https://docs.rs/cryptirust/latest/cryptirust/)
 <!-- cargo-sync-readme start -->
 
 **Cryptirust** is a flexible and efficient Rust library for generating customizable, pronounceable passwords with entropy calculation. It leverages a Markov chain-based approach through its core `Generator` struct, allowing you to construct secure passphrases and word-based passwords from predefined or user-defined token lists. 
