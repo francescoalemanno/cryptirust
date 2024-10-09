@@ -1,5 +1,15 @@
 # Cryptirust
+[![Crates.io][crates-badge]][crates-url]
+[![MIT licensed][mit-badge]][mit-url]
+[![Build Status][actions-badge]][actions-url]
+[![Discord chat][discord-badge]][discord-url]
 
+[crates-badge]: https://img.shields.io/crates/v/cryptirust.svg
+[crates-url]: https://crates.io/crates/cryptirust
+[mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[mit-url]: https://github.com/francescoalemanno/cryptirust/blob/master/LICENSE
+
+[API Docs](https://docs.rs/cryptirust/latest/cryptirust/)
 <!-- cargo-sync-readme start -->
 
 **Cryptirust** is a Rust library for generating highly customizable and pronounceable passwords. It provides a flexible API to create passphrases, word-based passwords, and sequences with symbols or numbers, with entropy calculation for each generated password.
@@ -64,6 +74,48 @@ fn main() {
     println!("Generated passphrase: {}", passphrase);
     println!("Entropy: {:.2} bits", entropy);
 }
+```
+
+## Command Line Interface is included with the library
+
+This CLI allows users to specify a pattern for the generated passphrases
+and the number of passphrases to generate. The default pattern is "www",
+and it generates a single passphrase if no arguments are provided.
+
+### Usage
+
+To run the CLI, first `cargo install cryptirust`, then use the following command:
+
+```bash
+cryptirust [PATTERN] [NUM]
+```
+
+- **PATTERN**: A string representing the desired structure of the generated
+               passphrases, default is `w-c-s-d` (i.e. word-character-symbol-digit).
+- **NUM**: The number of passphrases to generate. Must be a positive integer.
+           Default is `5`.
+
+### Examples
+
+Generate one passphrase with the default pattern:
+```bash
+cryptirust
+
+         1:     35.06   reschan-a-*-7
+         2:     32.46   crusat-u-^-9
+         3:     24.73   septi-s-*-9
+         4:     37.20   proggilen-f-?-9
+         5:     31.29   penhan-l---9
+```
+
+Generate five passphrases with a custom pattern:
+```bash
+cryptirust "www" 4
+
+         1:     57.84   jitteri.choverfe.impure
+         2:     67.58   cupanton.gustopiu.epical
+         3:     67.49   renotyp.sharfishi.blammog
+         4:     61.15   listings.chucke.placepsyc
 ```
 
 ## License
