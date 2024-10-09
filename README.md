@@ -1,27 +1,28 @@
 # Cryptirust
 [![Crates.io][crates-badge]][crates-url]
 [![MIT licensed][mit-badge]][mit-url]
-[![Build Status][actions-badge]][actions-url]
-[![Discord chat][discord-badge]][discord-url]
+[![Build Status](ci-badge)](ci-yml)
 
 [crates-badge]: https://img.shields.io/crates/v/cryptirust.svg
 [crates-url]: https://crates.io/crates/cryptirust
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [mit-url]: https://github.com/francescoalemanno/cryptirust/blob/master/LICENSE
+[ci-badge]: https://github.com/francescoalemanno/cryptirust/actions/workflows/rust.yml/badge.svg?branch=master
+[ci-yml]: https://github.com/francescoalemanno/cryptirust/actions/workflows/rust.yml
 
 [API Docs](https://docs.rs/cryptirust/latest/cryptirust/)
 <!-- cargo-sync-readme start -->
 
-**Cryptirust** is a Rust library for generating highly customizable and pronounceable passwords. It provides a flexible API to create passphrases, word-based passwords, and sequences with symbols or numbers, with entropy calculation for each generated password.
+**Cryptirust** is a flexible and efficient Rust library for generating customizable, pronounceable passwords with entropy calculation. It leverages a Markov chain-based approach through its core `Generator` struct, allowing you to construct secure passphrases and word-based passwords from predefined or user-defined token lists. 
 
-The library is built around a `Generator` struct that uses a Markov chain-based approach to construct passwords based on predefined or custom token lists, allowing for fine-grained control over password structure and randomness.
+Designed to balance security, usability, and flexibility, Cryptirust offers fine-grained control over the structure and randomness of passwords. Whether you're creating simple, memorable passphrases or complex high-entropy passwords, Cryptirust provides an intuitive API to meet a range of password generation needs.
 
-## Features
+### Key Features
 
-- **Pronounceable Passwords**: Generate passwords or passphrases that are easy to pronounce and remember.
-- **Entropy Calculation**: Automatically computes the entropy of each password generated.
-- **Custom phonetic style**: Define your own sets of word-tokens and control the depth of the probabilistic model (Markov chain).
-- **Flexible Generation**: Generate passphrases, or custom patterns including symbols, pseudo-words, and digits.
+- **Pronounceable Passwords**: Create easy-to-pronounce, memorable passwords using phonetic patterns.
+- **Entropy Calculation**: Automatically calculates and returns the entropy of each generated password, helping you gauge its strength.
+- **Custom Token Support**: Define custom token sets and adjust the depth of the Markov chain model for even greater control over password structure.
+- **Pattern Flexibility**: Generate passphrases, pseudo-words, and custom patterns that can include symbols, numbers, and more.
 
 ## Quick start
 
