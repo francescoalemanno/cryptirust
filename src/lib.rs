@@ -1,7 +1,7 @@
 //! # cryptirust
 //!
 //! `cryptirust` is a fast and flexible library for generating secure, pronounceable passwords.
-//! It offers fine-tuned control over password generation, allowing you to customize patterns, 
+//! It offers fine-tuned control over password generation, allowing you to customize patterns,
 //! include symbols or numbers, and generate passphrases or words with high entropy.
 //!
 //! ## Features
@@ -14,15 +14,15 @@
 //!
 //! ## Getting Started
 //!
-//! To begin generating passwords, create a `Generator` and customize it based on your needs. 
+//! To begin generating passwords, create a `Generator` and customize it based on your needs.
 //! Here's a quick example of generating a passphrase with 4 words:
 //!
 //! ```rust
 //! use cryptirust::Generator;
-//! 
+//!
 //! let mut generator = Generator::new();
 //! let (passphrase, entropy) = generator.gen_passphrase(4);
-//! 
+//!
 //! println!("Generated passphrase: {}", passphrase);
 //! println!("Entropy: {} bits", entropy);
 //! ```
@@ -50,7 +50,7 @@
 //!
 //! ## High Entropy Mode
 //!
-//! `cryptirust` provides an option for generating passwords with increased entropy by utilizing a more compact Markov chain depth. 
+//! `cryptirust` provides an option for generating passwords with increased entropy by utilizing a more compact Markov chain depth.
 //! You can switch to **high entropy** mode to prioritize complexity over pronounceability:
 //!
 //! ```rust
@@ -60,7 +60,7 @@
 //! println!("High-entropy passphrase: {}", secure_pass);
 //! println!("Entropy: {} bits", entropy);
 //! ```
-//! 
+//!
 //! ## Additional Functionality
 //!
 //! - Generate consonant-vowel sequences for balanced and pronounceable passwords.
@@ -68,8 +68,8 @@
 //!
 //! ## Why Use cryptirust?
 //!
-//! `cryptirust` is built for developers seeking a balance between security, usability, and flexibility in password generation. 
-//! Whether you need a simple passphrase or a complex, high-entropy password, `cryptirust` gives you the tools to control the 
+//! `cryptirust` is built for developers seeking a balance between security, usability, and flexibility in password generation.
+//! Whether you need a simple passphrase or a complex, high-entropy password, `cryptirust` gives you the tools to control the
 //! process and ensure robust security.
 //!
 //! ## Contributing
@@ -79,11 +79,11 @@
 //! ## License
 //!
 //! This project is licensed under the MIT License.
-//! 
+//!
 //! ## Command Line Interface is included with the library
-//! 
+//!
 //! This CLI allows users to specify a pattern for the generated passphrases
-//! and the number of passphrases to generate. The default pattern is "www", 
+//! and the number of passphrases to generate. The default pattern is "www",
 //! and it generates a single passphrase if no arguments are provided.
 //!
 //! ### Usage
@@ -94,21 +94,32 @@
 //! cryptirust [PATTERN] [NUM]
 //! ```
 //!
-//! - **PATTERN**: A string representing the desired structure of the generated 
+//! - **PATTERN**: A string representing the desired structure of the generated
 //!                passphrases, default is `w-c-s-d` (i.e. word-character-symbol-digit).
 //! - **NUM**: The number of passphrases to generate. Must be a positive integer.
-//!            Default is `1`.
+//!            Default is `5`.
 //!
 //! ### Examples
 //!
 //! Generate one passphrase with the default pattern:
 //! ```bash
 //! cryptirust
+//! 
+//!          1:     35.06   reschan-a-*-7
+//!          2:     32.46   crusat-u-^-9
+//!          3:     24.73   septi-s-*-9
+//!          4:     37.20   proggilen-f-?-9
+//!          5:     31.29   penhan-l---9
 //! ```
 //!
 //! Generate five passphrases with a custom pattern:
 //! ```bash
-//! cryptirust "www" 5
+//! cryptirust "www" 4
+//! 
+//!          1:     57.84   jitteri.choverfe.impure
+//!          2:     67.58   cupanton.gustopiu.epical
+//!          3:     67.49   renotyp.sharfishi.blammog
+//!          4:     61.15   listings.chucke.placepsyc
 //! ```
 
 use rand::prelude::*;
@@ -244,60 +255,60 @@ impl Generator {
         return self.gen_from_pattern(&"w".repeat(words as usize));
     }
 
-/// Generates a password based on a given pattern, while calculating its entropy.
-///
-/// The pattern string defines how the password is structured, where different
-/// characters in the pattern correspond to different token types:
-///
-/// * `'w'` - Generates a word from the token list (lowercase).
-/// * `'W'` - Generates a word from the token list (capitalized).
-/// * `'s'` - Inserts a symbol from the predefined symbol set (`@#!$%&=?^+-*"`).
-/// * `'d'` - Inserts a digit from the set `0-9`.
-/// * `'c'` - Generates a char token using the markov chain.
-/// * `'C'` - Generates a char token, capitalized.
-///
-/// Additionally, any literal character (e.g., `.` or `!`) can be inserted into the
-/// pattern, which will be directly appended to the password as is.
-///
-/// The method also supports escape sequences (`\`) to treat characters as literals, 
-/// allowing pattern symbols like `'w'` or `'s'` to be included in the final password without 
-/// triggering token generation.
-///
-/// # Parameters
-///
-/// * `pattern`: A string that defines the structure of the generated password. Each character
-/// in the string corresponds to a token type, symbol, or literal.
-///
-/// # Returns
-///
-/// A tuple containing:
-/// 
-/// * `String`: The generated password based on the given pattern.
-/// * `f64`: The estimated entropy of the generated password, calculated using the log base 2 of the number
-/// of possible outcomes for each token.
-///
-/// # Example
-///
-/// ```rust
-/// use cryptirust::Generator;
-/// let mut gen = Generator::new();
-/// let (password, entropy) = gen.gen_from_pattern("wWsdC");
-/// println!("Generated password: {}, Entropy: {}", password, entropy);
-/// ```
-///
-/// In this example, the pattern `"wWsdC"` would generate a password such as `"wordWORD5@Q"`,
-/// with its corresponding entropy value.
-///
-/// # Panic
-///
-/// Panics if the internal random number generator fails to produce a valid token 
-/// or length value for the password generation process.
-///
-/// # Performance
-///
-/// The performance of this method depends on the length of the input pattern and 
-/// the complexity of tokens defined in the jump table. Deeper chain depths or longer 
-/// patterns may result in higher processing time.
+    /// Generates a password based on a given pattern, while calculating its entropy.
+    ///
+    /// The pattern string defines how the password is structured, where different
+    /// characters in the pattern correspond to different token types:
+    ///
+    /// * `'w'` - Generates a word from the token list (lowercase).
+    /// * `'W'` - Generates a word from the token list (capitalized).
+    /// * `'s'` - Inserts a symbol from the predefined symbol set (`@#!$%&=?^+-*"`).
+    /// * `'d'` - Inserts a digit from the set `0-9`.
+    /// * `'c'` - Generates a char token using the markov chain.
+    /// * `'C'` - Generates a char token, capitalized.
+    ///
+    /// Additionally, any literal character (e.g., `.` or `!`) can be inserted into the
+    /// pattern, which will be directly appended to the password as is.
+    ///
+    /// The method also supports escape sequences (`\`) to treat characters as literals,
+    /// allowing pattern symbols like `'w'` or `'s'` to be included in the final password without
+    /// triggering token generation.
+    ///
+    /// # Parameters
+    ///
+    /// * `pattern`: A string that defines the structure of the generated password. Each character
+    /// in the string corresponds to a token type, symbol, or literal.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing:
+    ///
+    /// * `String`: The generated password based on the given pattern.
+    /// * `f64`: The estimated entropy of the generated password, calculated using the log base 2 of the number
+    /// of possible outcomes for each token.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cryptirust::Generator;
+    /// let mut gen = Generator::new();
+    /// let (password, entropy) = gen.gen_from_pattern("wWsdC");
+    /// println!("Generated password: {}, Entropy: {}", password, entropy);
+    /// ```
+    ///
+    /// In this example, the pattern `"wWsdC"` would generate a password such as `"wordWORD5@Q"`,
+    /// with its corresponding entropy value.
+    ///
+    /// # Panic
+    ///
+    /// Panics if the internal random number generator fails to produce a valid token
+    /// or length value for the password generation process.
+    ///
+    /// # Performance
+    ///
+    /// The performance of this method depends on the length of the input pattern and
+    /// the complexity of tokens defined in the jump table. Deeper chain depths or longer
+    /// patterns may result in higher processing time.
     pub fn gen_from_pattern(&mut self, pattern: &str) -> (String, f64) {
         let mut passphrase = String::new();
         let mut entropy = 0.0;
@@ -330,7 +341,11 @@ impl Generator {
                         entropy += h_head + h_leng;
                     }
                     's' | 'd' => {
-                        let symbols = if c == 's' { "@#!$%&=?^+-*\"" } else { "0987654321" };
+                        let symbols = if c == 's' {
+                            "@#!$%&=?^+-*\""
+                        } else {
+                            "0987654321"
+                        };
                         let d = self.rng.gen_range(0..symbols.len());
                         passphrase.push(symbols.chars().nth(d).unwrap());
                         entropy += (symbols.len() as f64).log2();
@@ -357,46 +372,46 @@ impl Generator {
     }
 
     /// Generates the next token in a sequence, based on the current seed and internal state.
-///
-/// This method uses a Markov chain approach to predict the next token in the sequence,
-/// leveraging the internal `jump_table` that was distilled from the token corpus.
-///
-/// The `seed` parameter is used as a starting point for the token generation. The method
-/// will look up the most recent characters (up to the chain depth) from the seed to
-/// determine the next likely token. If no match is found for the current sequence, the 
-/// method will progressively reduce the seed size until a match is located or all 
-/// options are exhausted.
-///
-/// # Arguments
-///
-/// * `seed` - A string slice representing the current sequence of characters, used to
-///            determine the next token in the Markov chain.
-///
-/// # Returns
-///
-/// A tuple containing:
-/// * `String` - The next token in the sequence, generated based on the internal state 
-///              and the given seed.
-/// * `f64` - The entropy associated with the generated token, indicating the randomness
-///           or unpredictability of the token.
-///
-/// # Panics
-///
-/// This function does not panic. In cases where no match is found in the `jump_table`,
-/// the method will continue reducing the seed until it finds a match or returns an 
-/// empty string.
-///
-/// # Example
-///
-/// ```rust
-/// # use cryptirust::Generator;
-/// let mut generator = Generator::new();
-/// let (token, entropy) = generator.gen_next_token("he");
-/// println!("Next token: {}, Entropy: {}", token, entropy);
-/// ```
-///
-/// This example demonstrates how to generate the next token in a sequence starting with
-/// the seed `"he"`. The method returns both the token and its associated entropy.
+    ///
+    /// This method uses a Markov chain approach to predict the next token in the sequence,
+    /// leveraging the internal `jump_table` that was distilled from the token corpus.
+    ///
+    /// The `seed` parameter is used as a starting point for the token generation. The method
+    /// will look up the most recent characters (up to the chain depth) from the seed to
+    /// determine the next likely token. If no match is found for the current sequence, the
+    /// method will progressively reduce the seed size until a match is located or all
+    /// options are exhausted.
+    ///
+    /// # Arguments
+    ///
+    /// * `seed` - A string slice representing the current sequence of characters, used to
+    ///            determine the next token in the Markov chain.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing:
+    /// * `String` - The next token in the sequence, generated based on the internal state
+    ///              and the given seed.
+    /// * `f64` - The entropy associated with the generated token, indicating the randomness
+    ///           or unpredictability of the token.
+    ///
+    /// # Panics
+    ///
+    /// This function does not panic. In cases where no match is found in the `jump_table`,
+    /// the method will continue reducing the seed until it finds a match or returns an
+    /// empty string.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use cryptirust::Generator;
+    /// let mut generator = Generator::new();
+    /// let (token, entropy) = generator.gen_next_token("he");
+    /// println!("Next token: {}, Entropy: {}", token, entropy);
+    /// ```
+    ///
+    /// This example demonstrates how to generate the next token in a sequence starting with
+    /// the seed `"he"`. The method returns both the token and its associated entropy.
     pub fn gen_next_token(&mut self, seed: &str) -> (String, f64) {
         let mut tok = seed.to_lowercase();
         loop {
