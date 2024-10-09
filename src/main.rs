@@ -12,6 +12,6 @@ pub fn main() {
     // Generate a passphrase with 5 words
     for i in 0..num {
         let (passphrase, pass_entropy) = generator.gen_from_pattern(&pattern);
-        println!("{:10}:{:10.2}   {}", i+1, pass_entropy, passphrase);
+        println!("{:10}:{:10.2}   {}", i + 1, pass_entropy, passphrase);
     }
 }

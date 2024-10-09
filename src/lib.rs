@@ -41,6 +41,7 @@
 //! Example of generating a password using a custom pattern:
 //!
 //! ```rust
+//! use cryptirust::*;
 //! let mut generator = Generator::new();
 //! let (password, entropy) = generator.gen_from_pattern("Ww-sd");
 //!
@@ -54,6 +55,7 @@
 //! You can switch to **high entropy** mode to prioritize complexity over pronounceability:
 //!
 //! ```rust
+//! use cryptirust::*;
 //! let mut generator = Generator::new_he();
 //! let (secure_pass, entropy) = generator.gen_passphrase(4);
 //!
@@ -104,7 +106,7 @@
 //! Generate one passphrase with the default pattern:
 //! ```bash
 //! cryptirust
-//! 
+//!
 //!          1:     35.06   reschan-a-*-7
 //!          2:     32.46   crusat-u-^-9
 //!          3:     24.73   septi-s-*-9
@@ -115,7 +117,7 @@
 //! Generate five passphrases with a custom pattern:
 //! ```bash
 //! cryptirust "www" 4
-//! 
+//!
 //!          1:     57.84   jitteri.choverfe.impure
 //!          2:     67.58   cupanton.gustopiu.epical
 //!          3:     67.49   renotyp.sharfishi.blammog
@@ -176,7 +178,7 @@ pub mod word_list;
 /// println!("Custom passphrase: {}", password);
 /// ```
 pub struct Generator {
-    rng: ChaCha8Rng,
+    pub rng: ChaCha8Rng,
     jump_table: HashMap<String, Distribution>,
     depth: usize,
 }
@@ -522,5 +524,65 @@ impl Generator {
         }
 
         dist_trans_matrix
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use word_list::simple;
+
+    use super::*;
+
+    fn certify(pattern: &str) -> bool {
+        let mut gen = Generator::new_custom(simple::list(), 2);
+        gen.rng = ChaCha8Rng::seed_from_u64(91827391); //fix seed for reproducible results
+        let mut hist = HashMap::<String, usize>::new();
+        let mut tot_h: f64 = 0.0;
+        let mut tot_c: f64 = 1e-16;
+        let mut q = 128;
+        let mut old_entropy = 0.0;
+        println!("testing pattern {}", pattern);
+        loop {
+            for _ in 0..q {
+                let (pw, h) = gen.gen_from_pattern(pattern);
+                tot_h += h;
+                tot_c += 1.0;
+                let v = hist.get(&pw).or(Some(&0)).unwrap();
+                hist.insert(pw, v + 1);
+            }
+            q += q / 16;
+            let avg_h = tot_h / tot_c;
+            let mut entropy = 0.0 as f64;
+            for (_, &v) in hist.iter() {
+                let p = v as f64 / tot_c;
+                entropy += -p * p.log2();
+            }
+            entropy += (hist.len() as f64 - 1.0) / (2.0 * tot_c);
+            if (entropy - avg_h).abs() < 1e-2 {
+                println!("- PASSED! unique words {}", hist.len());
+                return true;
+            }
+            if (entropy - old_entropy).abs() < 1e-5 {
+                println!("- WARNING, entropies {} {}.", entropy, avg_h);
+                if (entropy - old_entropy).abs() < 1e-6 {
+                    println!("- FAILED, entropies {} {}.", entropy, avg_h);
+                    return false;
+                }
+            }
+            old_entropy = entropy;
+        }
+    }
+
+    #[test]
+    fn test_word() {
+        assert!(certify("w"));
+        assert!(certify("wd"));
+        assert!(certify("ws"));
+        assert!(certify("wc"));
+        assert!(certify("ccd"));
+        assert!(certify("acccc"));
+        assert!(certify("ss"));
+        assert!(certify(""));
+        assert!(certify("ww"));
     }
 }
