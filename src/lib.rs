@@ -60,7 +60,7 @@
 //! println!("High-entropy passphrase: {}", secure_pass);
 //! println!("Entropy: {} bits", entropy);
 //! ```
-//!
+//! 
 //! ## Additional Functionality
 //!
 //! - Generate consonant-vowel sequences for balanced and pronounceable passwords.
@@ -79,6 +79,37 @@
 //! ## License
 //!
 //! This project is licensed under the MIT License.
+//! 
+//! ## Command Line Interface is included with the library
+//! 
+//! This CLI allows users to specify a pattern for the generated passphrases
+//! and the number of passphrases to generate. The default pattern is "www", 
+//! and it generates a single passphrase if no arguments are provided.
+//!
+//! ### Usage
+//!
+//! To run the CLI, first `cargo install cryptirust`, then use the following command:
+//!
+//! ```bash
+//! cryptirust [PATTERN] [NUM]
+//! ```
+//!
+//! - **PATTERN**: A string representing the desired structure of the generated 
+//!                passphrases, default is `w-c-s-d` (i.e. word-character-symbol-digit).
+//! - **NUM**: The number of passphrases to generate. Must be a positive integer.
+//!            Default is `1`.
+//!
+//! ### Examples
+//!
+//! Generate one passphrase with the default pattern:
+//! ```bash
+//! cryptirust
+//! ```
+//!
+//! Generate five passphrases with a custom pattern:
+//! ```bash
+//! cryptirust "www" 5
+//! ```
 
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;

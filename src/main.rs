@@ -1,8 +1,8 @@
 use cryptirust::*;
 
-fn main() {
+pub fn main() {
     // Initialize a new Generator instance
-    let pattern = std::env::args().nth(1).unwrap_or("www".to_string());
+    let pattern = std::env::args().nth(1).unwrap_or("w-c-s-d".to_string());
     let num = std::env::args().nth(2).unwrap_or("1".to_string()).parse::<u64>().unwrap_or(1);
     let mut generator = Generator::new();
     // Generate a passphrase with 5 words
