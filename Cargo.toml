@@ -1,6 +1,6 @@
 [package]
 name = "cryptirust"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Francesco Alemanno <francescoalemanno710@gmail.com>"]
 description = "A flexible password generator that creates pronounceable passwords with adjustable entropy."
 license = "MIT"
