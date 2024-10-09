@@ -1,7 +1,3 @@
-Here’s a documentation-style guide for your `cryptirust` package, taking inspiration from top Rust packages like Axum, Clap, and Actix, aiming for clarity, ease of use, and detailed examples. The goal is to make your package accessible and polished for other developers.
-
----
-
 # Cryptirust
 
 **Cryptirust** is a Rust library for generating highly customizable and pronounceable passwords. It provides a flexible API to create passphrases, word-based passwords, and sequences with symbols or numbers, with entropy calculation for each generated password.
