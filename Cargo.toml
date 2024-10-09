@@ -8,7 +8,7 @@ repository = "https://github.com/francescoalemanno/cryptirust"
 documentation = "https://docs.rs/cryptirust"
 readme = "README.md"
 keywords = ["password", "generator", "pronounceable", "security"]
-categories = ["cryptography", "utilities"]
+categories = ["cryptography", "text-processing", "value-formatting"]
 edition = "2021"
 
 [dependencies]
