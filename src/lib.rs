@@ -325,7 +325,7 @@ impl Generator {
                             head = head.to_uppercase();
                         }
                         while head.len() < leng {
-                            let (nc, nh) = self.gen_next_token(&head.to_lowercase());
+                            let (nc, nh) = self.gen_next_token(&head);
                             head.push_str(&nc);
                             h_head += nh;
                         }
@@ -347,7 +347,7 @@ impl Generator {
                         entropy += (symbols.len() as f64).log2();
                     }
                     'c' | 'C' => {
-                        let (tok, h) = self.gen_next_token(&passphrase.to_lowercase());
+                        let (tok, h) = self.gen_next_token(&passphrase);
                         if c == 'C' {
                             passphrase.push_str(&tok.to_uppercase());
                         } else {
@@ -409,7 +409,8 @@ impl Generator {
     /// This example demonstrates how to generate the next token in a sequence starting with
     /// the seed `"he"`. The method returns both the token and its associated entropy.
     pub fn gen_next_token(&mut self, seed: &str) -> (String, f64) {
-        let mut tok = seed.to_lowercase();
+        let lowseed = seed.to_lowercase();
+        let mut tok = lowseed.as_str();
         loop {
             let depth = std::cmp::min(tok.len(), self.depth);
             let sub_tok = &tok[tok.len() - depth..];
@@ -421,7 +422,7 @@ impl Generator {
                     }
                 }
             }
-            tok = tok[1..].to_string();
+            tok = &tok[1..];
         }
     }
 
@@ -512,7 +513,7 @@ mod tests {
 
     fn certify(pattern: &str) -> bool {
         let mut gen = Generator::new_custom(simple::list(), 2);
-        gen.rng = ChaCha8Rng::seed_from_u64(91827391); //fix seed for reproducible results
+        gen.rng = ChaCha8Rng::seed_from_u64(0x5792CBF); //fix seed for reproducible results
         let mut hist = HashMap::<String, usize>::new();
         let mut tot_h: f64 = 0.0;
         let mut tot_c: f64 = 1e-16;
