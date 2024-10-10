@@ -1,13 +1,13 @@
 [package]
 name = "cryptirust"
-version = "0.2.0"
+version = "1.0.0"
 authors = ["Francesco Alemanno <francescoalemanno710@gmail.com>"]
-description = "A flexible password generator that creates pronounceable passwords with adjustable entropy."
+description = "A flexible password generator that creates pronounceable passwords with adjustable entropy and custom patterns."
 license = "MIT"
 repository = "https://github.com/francescoalemanno/cryptirust"
 documentation = "https://docs.rs/cryptirust"
 readme = "README.md"
-keywords = ["password", "generator", "pronounceable", "security"]
+keywords = ["password", "generator", "pronounceable", "phonetic", "markov", "style", "custom", "security", "library", "cli"]
 categories = ["cryptography", "text-processing", "value-formatting"]
 edition = "2021"
 

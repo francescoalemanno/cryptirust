@@ -15,7 +15,7 @@
 
 <!-- cargo-sync-readme start -->
 
-**Cryptirust** is a flexible and efficient Rust library for generating customizable, pronounceable passwords with entropy calculation. It leverages a Markov chain-based approach through its core `Generator` struct, allowing you to construct secure passphrases and word-based passwords from predefined or user-defined token lists. 
+**Cryptirust** is a flexible and efficient Rust library for generating customizable, pronounceable passwords with entropy calculation. It leverages a Markov chain-based approach through its core `Generator` struct, allowing you to construct secure passphrases and word-based passwords from predefined or user-defined token lists.
 
 Designed to balance security, usability, and flexibility, Cryptirust offers fine-grained control over the structure and randomness of passwords. Whether you're creating simple, memorable passphrases or complex high-entropy passwords, Cryptirust provides an intuitive API to meet a range of password generation needs.
 
@@ -28,29 +28,14 @@ Designed to balance security, usability, and flexibility, Cryptirust offers fine
 
 ## Quick start
 
-### 1. Create a Default Generator
-
-The default generator uses the [EFF wordlist](https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases) as a base for training the markov model which generates secure and easy-to-remember passphrases.
-
-```rust
-use cryptirust::Generator;
-
-fn main() {
-    let mut generator = Generator::new();
-    let (passphrase, entropy) = generator.gen_passphrase(4);
-    println!("Generated passphrase: {}", passphrase);
-    println!("Entropy: {:.2} bits", entropy);
-}
-```
-
-### 2. Generate a Password from a Custom Pattern
+### 1. Generate a Password from a Custom Pattern
 
 Use a pattern string to create complex passwords:
 
-- **`w`**: Lowercase pseudo-word.
-- **`W`**: Uppercase pseudo-word.
-- **`c`**: Lowercase character.
-- **`C`**: Uppercase character.
+- **`c`**: Lowercase token.
+- **`C`**: Uppercase token.
+- **`w`**: Lowercase word.
+- **`W`**: Uppercase word.
 - **`s`**: Symbol.
 - **`d`**: Digit.
 - **`\`**: Escape next character.
@@ -60,20 +45,20 @@ use cryptirust::Generator;
 
 fn main() {
     let mut generator = Generator::new();
-    let (password, entropy) = generator.gen_from_pattern("WcsdwW");
+    let (password, entropy) = generator.gen_from_pattern("cccsd");
     println!("Generated password: {}", password);
     println!("Entropy: {:.2} bits", entropy);
 }
 ```
 
-### 3. Generate a Passphrase with Custom Depth
+### 2. Generate a Passphrase with Custom Depth
 
 ```rust
-use cryptirust::Generator;
+use cryptirust::*;
 
 fn main() {
-    let mut generator = Generator::new_custom(vec!["apple".to_string(), "banana".to_string(), "cherry".to_string()], 2);
-    let (passphrase, entropy) = generator.gen_passphrase(5);
+    let mut generator = Generator::new_custom(word_list::eff::list(), 2);
+    let (passphrase, entropy) = generator.gen_from_pattern("w.w.w.w");;
     println!("Generated passphrase: {}", passphrase);
     println!("Entropy: {:.2} bits", entropy);
 }
@@ -81,44 +66,48 @@ fn main() {
 
 ## Command Line Interface is included with the library
 
-This CLI allows users to specify a pattern for the generated passphrases
-and the number of passphrases to generate. The default pattern is "www",
-and it generates a single passphrase if no arguments are provided.
+This CLI allows users to specify a pattern for the generated passphrases, the number
+of passphrases to generate and the depth of the markov model.
 
 ### Usage
 
 To run the CLI, first `cargo install cryptirust`, then use the following command:
 
 ```bash
-cryptirust [PATTERN] [NUM]
+cryptirust [PATTERN] [NUM] [DEPTH]
 ```
 
 - **PATTERN**: A string representing the desired structure of the generated
-               passphrases, default is `w-c-s-d` (i.e. word-character-symbol-digit).
+               passphrases, default is `w-c-s-d` (i.e. word-token-symbol-digit).
 - **NUM**: The number of passphrases to generate. Must be a positive integer.
            Default is `5`.
+- **DEPTH**: The depth of the markov model. Must be a positive integer.
+           Default is `3`.
 
 ### Examples
 
-Generate one passphrase with the default pattern:
+Generate five passphrases with the default pattern:
 ```bash
 cryptirust
 
-         1:     35.06   reschan-a-*-7
-         2:     32.46   crusat-u-^-9
-         3:     24.73   septi-s-*-9
-         4:     37.20   proggilen-f-?-9
-         5:     31.29   penhan-l---9
+       n.     log2(guesses)     secret
+        1              29.83    stingly-rak-+-5
+        2              34.93    attinge-roy-+-5
+        3              26.01    whomever-sta-"-3
+        4              31.29    laddering-gre-^-5
+        5              30.09    renditzy-sha-%-5
 ```
 
-Generate five passphrases with a custom pattern:
+Generate six passphrases with a custom pattern "w.w.w" and a custom depth 2:
 ```bash
-cryptirust "www" 4
-
-         1:     57.84   jitteri.choverfe.impure
-         2:     67.58   cupanton.gustopiu.epical
-         3:     67.49   renotyp.sharfishi.blammog
-         4:     61.15   listings.chucke.placepsyc
+cryptirust w.w.w 6 2
+       n.     log2(guesses)     secret
+        1              57.60    gontex.atiness.unteet
+        2              67.70    casuperl.cacharne.aneyway
+        3              60.03    choomeg.deflanth.nessagre
+        4              53.64    vishelaw.gedity.wildness
+        5              58.19    dulays.frishea.queure
+        6              56.36    partifie.deligeom.refullyi
 ```
 
 ## License
