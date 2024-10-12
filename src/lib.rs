@@ -8,7 +8,7 @@
 //! - **Entropy Calculation**: Automatically calculates and returns the entropy of each generated password, helping you gauge its strength.
 //! - **Custom Token Support**: Define custom token sets and adjust the depth of the Markov chain model for even greater control over password structure.
 //! - **Pattern Flexibility**: Generate passphrases, pseudo-words, and custom patterns that can include symbols, numbers, and more.
-//! - **CLI**: most functions of cryptirust are easily accessible from [`Crypticli`](../crypticli/index.html).
+//! - **CLI**: most functions of cryptirust are easily accessible from [Crypticli](`crypticli::cli`).
 //!
 //! ## Quick start
 //!
@@ -55,6 +55,7 @@
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use std::collections::HashMap;
+pub mod crypticli;
 pub mod word_list;
 
 /// `Generator` is the core struct responsible for generating customizable, pronounceable passwords.
