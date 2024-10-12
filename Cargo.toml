@@ -1,6 +1,6 @@
 [package]
 name = "cryptirust"
-version = "1.0.0"
+version = "2.0.0"
 authors = ["Francesco Alemanno <francescoalemanno710@gmail.com>"]
 description = "A flexible password generator that creates pronounceable passwords with adjustable entropy and custom patterns."
 license = "MIT"
@@ -14,3 +14,8 @@ edition = "2021"
 [dependencies]
 rand = "0.8.5"
 rand_chacha = "0.3.1"
+argh = "0.1"
+
+[[bin]]
+path = "src/main.rs"
+name = "crypticli"

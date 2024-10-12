@@ -25,6 +25,7 @@ Designed to balance security, usability, and flexibility, Cryptirust offers fine
 - **Entropy Calculation**: Automatically calculates and returns the entropy of each generated password, helping you gauge its strength.
 - **Custom Token Support**: Define custom token sets and adjust the depth of the Markov chain model for even greater control over password structure.
 - **Pattern Flexibility**: Generate passphrases, pseudo-words, and custom patterns that can include symbols, numbers, and more.
+- **CLI**: most functions of cryptirust are easily accessible from [`Crypticli`](../crypticli/index.html).
 
 ## Quick start
 
@@ -57,57 +58,11 @@ fn main() {
 use cryptirust::*;
 
 fn main() {
-    let mut generator = Generator::new_custom(word_list::eff::list(), 2);
+    let mut generator = Generator::new_custom(word_list::eff::list(), 2).unwrap();
     let (passphrase, entropy) = generator.gen_from_pattern("w.w.w.w");;
     println!("Generated passphrase: {}", passphrase);
     println!("Entropy: {:.2} bits", entropy);
 }
-```
-
-## Command Line Interface is included with the library
-
-This CLI allows users to specify a pattern for the generated passphrases, the number
-of passphrases to generate and the depth of the markov model.
-
-### Usage
-
-To run the CLI, first `cargo install cryptirust`, then use the following command:
-
-```bash
-cryptirust [PATTERN] [NUM] [DEPTH]
-```
-
-- **PATTERN**: A string representing the desired structure of the generated
-               passphrases, default is `w-c-s-d` (i.e. word-token-symbol-digit).
-- **NUM**: The number of passphrases to generate. Must be a positive integer.
-           Default is `5`.
-- **DEPTH**: The depth of the markov model. Must be a positive integer.
-           Default is `3`.
-
-### Examples
-
-Generate five passphrases with the default pattern:
-```bash
-cryptirust
-
-       n.     log2(guesses)     secret
-        1              29.83    stingly-rak-+-5
-        2              34.93    attinge-roy-+-5
-        3              26.01    whomever-sta-"-3
-        4              31.29    laddering-gre-^-5
-        5              30.09    renditzy-sha-%-5
-```
-
-Generate six passphrases with a custom pattern "w.w.w" and a custom depth 2:
-```bash
-cryptirust w.w.w 6 2
-       n.     log2(guesses)     secret
-        1              57.60    gontex.atiness.unteet
-        2              67.70    casuperl.cacharne.aneyway
-        3              60.03    choomeg.deflanth.nessagre
-        4              53.64    vishelaw.gedity.wildness
-        5              58.19    dulays.frishea.queure
-        6              56.36    partifie.deligeom.refullyi
 ```
 
 ## License

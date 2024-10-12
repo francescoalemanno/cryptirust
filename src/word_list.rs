@@ -1,2 +1,4 @@
+pub mod cv;
+pub mod debug;
 pub mod eff;
-pub mod simple;
+pub mod italian;

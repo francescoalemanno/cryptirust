@@ -8,6 +8,7 @@
 //! - **Entropy Calculation**: Automatically calculates and returns the entropy of each generated password, helping you gauge its strength.
 //! - **Custom Token Support**: Define custom token sets and adjust the depth of the Markov chain model for even greater control over password structure.
 //! - **Pattern Flexibility**: Generate passphrases, pseudo-words, and custom patterns that can include symbols, numbers, and more.
+//! - **CLI**: most functions of cryptirust are easily accessible from [`Crypticli`](../crypticli/index.html).
 //!
 //! ## Quick start
 //!
@@ -40,64 +41,17 @@
 //! use cryptirust::*;
 //!
 //! fn main() {
-//!     let mut generator = Generator::new_custom(word_list::eff::list(), 2);
+//!     let mut generator = Generator::new_custom(word_list::eff::list(), 2).unwrap();
 //!     let (passphrase, entropy) = generator.gen_from_pattern("w.w.w.w");;
 //!     println!("Generated passphrase: {}", passphrase);
 //!     println!("Entropy: {:.2} bits", entropy);
 //! }
 //! ```
 //!
-//! ## Command Line Interface is included with the library
-//!
-//! This CLI allows users to specify a pattern for the generated passphrases, the number
-//! of passphrases to generate and the depth of the markov model.
-//!
-//! ### Usage
-//!
-//! To run the CLI, first `cargo install cryptirust`, then use the following command:
-//!
-//! ```bash
-//! cryptirust [PATTERN] [NUM] [DEPTH]
-//! ```
-//!
-//! - **PATTERN**: A string representing the desired structure of the generated
-//!                passphrases, default is `w-c-s-d` (i.e. word-token-symbol-digit).
-//! - **NUM**: The number of passphrases to generate. Must be a positive integer.
-//!            Default is `5`.
-//! - **DEPTH**: The depth of the markov model. Must be a positive integer.
-//!            Default is `3`.
-//!
-//! ### Examples
-//!
-//! Generate five passphrases with the default pattern:
-//! ```bash
-//! cryptirust
-//!
-//!        n.     log2(guesses)     secret
-//!         1              29.83    stingly-rak-+-5
-//!         2              34.93    attinge-roy-+-5
-//!         3              26.01    whomever-sta-"-3
-//!         4              31.29    laddering-gre-^-5
-//!         5              30.09    renditzy-sha-%-5
-//! ```
-//!
-//! Generate six passphrases with a custom pattern "w.w.w" and a custom depth 2:
-//! ```bash
-//! cryptirust w.w.w 6 2
-//!        n.     log2(guesses)     secret
-//!         1              57.60    gontex.atiness.unteet
-//!         2              67.70    casuperl.cacharne.aneyway
-//!         3              60.03    choomeg.deflanth.nessagre
-//!         4              53.64    vishelaw.gedity.wildness
-//!         5              58.19    dulays.frishea.queure
-//!         6              56.36    partifie.deligeom.refullyi
-//! ```
-//!
 //! ## License
 //!
 //! Cryptirust is licensed under the MIT License.
 //!
-#[doc = include_str!("../README.md")]
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use std::collections::HashMap;
@@ -146,15 +100,15 @@ pub mod word_list;
 ///     String::from("ownership"),
 /// ];
 ///
-/// let mut generator = Generator::new_custom(custom_tokens, 2);
+/// let mut generator = Generator::new_custom(custom_tokens, 2).unwrap();
 /// let (password, entropy) = generator.gen_from_pattern("w.w.w.w");
 /// println!("Custom passphrase: {}", password);
 /// ```
 pub struct Generator {
     pub rng: ChaCha8Rng,
+    pub toks_per_word: usize,
     jump_table: HashMap<String, Distribution>,
     depth: usize,
-    toks_per_word: f64,
 }
 impl Default for Generator {
     fn default() -> Self {
@@ -165,6 +119,7 @@ impl Default for Generator {
 /// It holds the token frequency data, entropy values, and
 /// other metadata necessary to create randomized sequences based on a Markov-like
 /// transition model.
+#[derive(Debug)]
 struct Distribution {
     tokens: Vec<String>,
     entropies: Vec<f64>,
@@ -174,29 +129,34 @@ struct Distribution {
 
 impl Generator {
     /// Creates a new generator with a custom token set and a specified Markov chain depth.
-    ///
-    /// * `tokens`: A vector of words or tokens to use for password generation.
-    /// * `chain_depth`: The depth of the Markov chain (how many preceding tokens are considered for generating the next token).
-    pub fn new_custom(tokens: Vec<String>, chain_depth: usize) -> Generator {
+    pub fn new_custom(tokens: Vec<String>, depth: usize) -> Option<Generator> {
+        let depth = depth.max(1);
         let rng = ChaCha8Rng::from_entropy();
-        let (jump_table, toks_per_word) = Generator::distill(tokens, chain_depth);
-
-        Generator {
-            rng,
-            jump_table,
-            depth: chain_depth,
-            toks_per_word,
+        let transition_matrix = transition_matrix_from_tokens(tokens, depth);
+        if transition_matrix.len() == 0 {
+            return None;
         }
+        let jump_table = jump_table_from_transition_matrix(transition_matrix);
+        if jump_table.len() == 0 {
+            return None;
+        }
+        let toks_per_word = (8.0 / max_depth(&jump_table)).ceil() as usize;
+        Some(Generator {
+            rng,
+            toks_per_word,
+            jump_table,
+            depth,
+        })
     }
 
     /// Creates a new generator using the default wordlist (EFF's word list) with a Markov chain depth of 3.
     pub fn new() -> Generator {
-        Generator::new_custom(word_list::eff::list(), 3)
+        Generator::new_custom(word_list::eff::list(), 3).unwrap()
     }
 
     /// Similar to `new()`, but uses a Markov chain depth of 2 for quicker password generation at the expense of phonetic fidelity.
     pub fn new_he() -> Generator {
-        Generator::new_custom(word_list::eff::list(), 2)
+        Generator::new_custom(word_list::eff::list(), 2).unwrap()
     }
 
     /// Generates a password based on a given pattern, while calculating its entropy.
@@ -243,11 +203,6 @@ impl Generator {
     /// In this example, the pattern `"wWsdC"` would generate a password such as `"hunkindEreso2"Mus"`,
     /// with its corresponding entropy value.
     ///
-    /// # Panic
-    ///
-    /// Panics if the internal random number generator fails to produce a valid token
-    /// or length value for the password generation process.
-    ///
     /// # Performance
     ///
     /// The performance of this method depends on the length of the input pattern and
@@ -269,13 +224,14 @@ impl Generator {
                 }
                 match c {
                     'w' | 'W' => {
-                        for i in 1..=(self.toks_per_word.ceil() as usize) {
-                            let (mut tok, h) = self.gen_next_token(&passphrase);
-                            if c == 'W' && i == 1 {
-                                tok = uppercase_first_letter(&tok);
+                        for i in 0..self.toks_per_word {
+                            if let Some((mut tok, h)) = self.gen_next_token(&passphrase) {
+                                if c == 'W' && i == 1 {
+                                    tok = uppercase_first_letter(&tok);
+                                }
+                                passphrase.push_str(&tok);
+                                entropy += h;
                             }
-                            passphrase.push_str(&tok);
-                            entropy += h;
                         }
                     }
                     's' | 'd' => {
@@ -289,12 +245,13 @@ impl Generator {
                         entropy += (symbols.len() as f64).log2();
                     }
                     'c' | 'C' => {
-                        let (mut tok, h) = self.gen_next_token(&passphrase);
-                        if c == 'C' {
-                            tok = uppercase_first_letter(&tok);
+                        if let Some((mut tok, h)) = self.gen_next_token(&passphrase) {
+                            if c == 'C' {
+                                tok = uppercase_first_letter(&tok);
+                            }
+                            passphrase.push_str(&tok);
+                            entropy += h;
                         }
-                        passphrase.push_str(&tok);
-                        entropy += h;
                     }
                     _ => {
                         passphrase.push(c);
@@ -310,135 +267,112 @@ impl Generator {
 
     /// Generates the next token in a sequence, based on the current seed and internal state.
     ///
-    /// This method uses a Markov chain approach to predict the next token in the sequence,
-    /// leveraging the internal `jump_table` that was distilled from the token corpus.
-    ///
-    /// The `seed` parameter is used as a starting point for the token generation. The method
-    /// will look up the most recent characters (up to the chain depth) from the seed to
-    /// determine the next likely token. If no match is found for the current sequence, the
-    /// method will progressively reduce the seed size until a match is located or all
-    /// options are exhausted.
-    ///
-    /// # Arguments
-    ///
-    /// * `seed` - A string slice representing the current sequence of characters, used to
-    ///            determine the next token in the Markov chain.
-    ///
-    /// # Returns
-    ///
-    /// A tuple containing:
-    /// * `String` - The next token in the sequence, generated based on the internal state
-    ///              and the given seed.
-    /// * `f64` - The entropy associated with the generated token, indicating the randomness
-    ///           or unpredictability of the token.
-    ///
-    /// # Panics
-    ///
-    /// This function does not panic. In cases where no match is found in the `jump_table`,
-    /// the method will continue reducing the seed until it finds a match or returns an
-    /// empty string.
-    ///
     /// # Example
     ///
     /// ```rust
     /// # use cryptirust::Generator;
     /// let mut generator = Generator::new();
-    /// let (token, entropy) = generator.gen_next_token("he");
+    /// let (token, entropy) = generator.gen_next_token("he").unwrap();
     /// println!("Next token: {}, Entropy: {}", token, entropy);
     /// ```
     ///
     /// This example demonstrates how to generate the next token in a sequence starting with
     /// the seed `"he"`. The method returns both the token and its associated entropy.
-    pub fn gen_next_token(&mut self, seed: &str) -> (String, f64) {
+    pub fn gen_next_token(&mut self, seed: &str) -> Option<(String, f64)> {
         let mut tok = seed;
         loop {
-            let depth = std::cmp::min(tok.len(), self.depth);
-            let sub_tok = &tok[tok.len() - depth..];
+            let sub_tok = &tok[tok.len().saturating_sub(self.depth)..];
             if let Some(tr) = self.jump_table.get(sub_tok) {
                 let n = self.rng.gen_range(0..tr.total);
                 for (i, v) in tr.counts.iter().enumerate() {
                     if n < *v {
-                        return (tr.tokens[i].clone(), tr.entropies[i]);
+                        return Some((tr.tokens[i].clone(), tr.entropies[i]));
                     }
                 }
-                panic!("unexpected");
+                return None;
             }
             if tok.len() == 0 {
-                return ("".to_string(), 0.0);
+                return None;
             }
             tok = &tok[1..];
         }
     }
+}
 
-    fn distill(tokens: Vec<String>, depth: usize) -> (HashMap<String, Distribution>, f64) {
-        let mut transition_matrix: HashMap<String, HashMap<String, usize>> = HashMap::new();
+fn max_depth(jump_table: &HashMap<String, Distribution>) -> f64 {
+    let mut t_depth = 0.0 as f64;
+    for (k, v) in jump_table.iter() {
+        t_depth = t_depth.max(k.len() as f64);
+        for c in v.tokens.iter() {
+            t_depth = t_depth.max(c.len() as f64);
+        }
+    }
+    t_depth
+}
 
-        let mut put = |str: String, r: String| {
-            transition_matrix
-                .entry(str)
-                .or_default()
-                .entry(r)
-                .and_modify(|count| *count += 1)
-                .or_insert(1);
-        };
-        let mut tot_word_len = 0.0;
-        let mut tot_tok_len = 0.0;
+fn transition_matrix_from_tokens(
+    tokens: Vec<String>,
+    depth: usize,
+) -> HashMap<String, HashMap<String, usize>> {
+    let mut transition_matrix: HashMap<String, HashMap<String, usize>> = HashMap::new();
 
-        for raw_w in tokens.iter() {
-            let sl = raw_w.trim().to_lowercase();
-            if sl.len() == 0 {
+    let mut put = |str: String, r: String| {
+        transition_matrix
+            .entry(str)
+            .or_default()
+            .entry(r)
+            .and_modify(|count| *count += 1)
+            .or_insert(1);
+    };
+
+    for raw_w in tokens.iter() {
+        let sl = raw_w.trim().to_lowercase();
+        if sl.len() == 0 {
+            continue;
+        }
+        let sb: Vec<char> = sl.chars().collect::<Vec<char>>();
+        for i in 0..sb.len() {
+            let from = sb[i.saturating_sub(depth)..i].into_iter().collect();
+            let to = sb[i..(i + depth).min(sb.len())].into_iter().collect();
+            if to == "" {
                 continue;
             }
-            let max_depth = depth.min(sl.len());
-            tot_tok_len += max_depth as f64;
-            tot_word_len += sl.len() as f64;
-            for d in 1..=max_depth {
-                let chars: Vec<String> = sl
-                    .chars()
-                    .collect::<Vec<char>>()
-                    .chunks(d)
-                    .map(|c| c.iter().collect::<String>())
-                    .collect();
-
-                for i in 0..chars.len().saturating_sub(1) {
-                    put(chars[i].clone(), chars[i + 1].clone());
-                }
-                // this must only happen at the final depth, in order to bootstrap each word with the longest token
-                if d == max_depth {
-                    put("".to_string(), chars[0].clone());
-                }
-            }
+            put(from, to);
         }
-
-        let mut dist_trans_matrix = HashMap::new();
-        for (k, rfreq) in transition_matrix.into_iter() {
-            let total: usize = rfreq.values().sum();
-            let mut counts = Vec::new();
-            let mut tokens = Vec::new();
-            let mut entropies = Vec::new();
-            let mut cum = 0;
-
-            for (token, &freq) in rfreq.iter() {
-                let p = freq as f64 / total as f64;
-                cum += freq;
-                entropies.push(-p.log2());
-                counts.push(cum);
-                tokens.push(token.clone());
-            }
-
-            dist_trans_matrix.insert(
-                k,
-                Distribution {
-                    tokens,
-                    entropies,
-                    counts,
-                    total,
-                },
-            );
-        }
-
-        (dist_trans_matrix, tot_word_len / tot_tok_len)
     }
+    transition_matrix
+}
+
+fn jump_table_from_transition_matrix(
+    transition_matrix: HashMap<String, HashMap<String, usize>>,
+) -> HashMap<String, Distribution> {
+    let mut dist_trans_matrix = HashMap::new();
+    for (k, rfreq) in transition_matrix.into_iter() {
+        let total: usize = rfreq.values().sum();
+        let mut counts = Vec::new();
+        let mut tokens = Vec::new();
+        let mut entropies = Vec::new();
+        let mut cum = 0;
+
+        for (token, &freq) in rfreq.iter() {
+            let p = freq as f64 / total as f64;
+            cum += freq;
+            entropies.push(-p.log2());
+            counts.push(cum);
+            tokens.push(token.clone());
+        }
+
+        dist_trans_matrix.insert(
+            k,
+            Distribution {
+                tokens,
+                entropies,
+                counts,
+                total,
+            },
+        );
+    }
+    dist_trans_matrix
 }
 
 fn uppercase_first_letter(s: &str) -> String {
@@ -451,12 +385,12 @@ fn uppercase_first_letter(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use word_list::simple;
+    use word_list::debug;
 
     use super::*;
 
     fn certify(pattern: &str) -> bool {
-        let mut gen = Generator::new_custom(simple::list(), 2);
+        let mut gen = Generator::new_custom(debug::list(), 2).unwrap();
         gen.rng = ChaCha8Rng::seed_from_u64(0x5792CBF); //fix seed for reproducible results
         let mut hist = HashMap::<String, usize>::new();
         let mut tot_h: f64 = 0.0;
