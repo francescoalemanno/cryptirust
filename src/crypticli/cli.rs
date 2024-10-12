@@ -11,7 +11,7 @@
 //! ```
 //! outputs
 //! ```bash
-//!   Usage: crypticli [-p <pattern>] [-n <num>] [-d <depth>]
+//!   Usage: crypticli [-p <pattern>] [-n <num>] [-d <depth>] [-s <style>]
 //!   
 //!   Flexible password generator based on the Cryptirust library.
 //!   
@@ -21,7 +21,8 @@
 //!     -n, --num         number of passphrases to generate, must be a positive
 //!                       integer.
 //!     -d, --depth       depth of the markov model, 1...3 are reasonable values.
-//!
+//!     -s, --style       word style: eff (english), italian, or cv (consonant-vowel
+//!                       pairs)
 //!     --help            display usage information
 //! ```
 //!
