@@ -107,9 +107,8 @@ pub mod word_list;
 /// ```
 pub struct Generator {
     pub rng: ChaCha8Rng,
-    pub toks_per_word: usize,
-    jump_table: HashMap<String, Distribution>,
     depth: usize,
+    jump_table: HashMap<String, Distribution>,
 }
 impl Default for Generator {
     fn default() -> Self {
@@ -141,12 +140,10 @@ impl Generator {
         if jump_table.len() == 0 {
             return None;
         }
-        let toks_per_word = (8.0 / max_depth(&jump_table)).ceil() as usize;
         Some(Generator {
-            rng,
-            toks_per_word,
-            jump_table,
-            depth,
+            rng: rng,
+            depth: max_depth(&jump_table),
+            jump_table: jump_table,
         })
     }
 
@@ -225,14 +222,15 @@ impl Generator {
                 }
                 match c {
                     'w' | 'W' => {
-                        for i in 0..self.toks_per_word {
-                            if let Some((mut tok, h)) = self.gen_next_token(&passphrase) {
-                                if c == 'W' && i == 1 {
-                                    tok = uppercase_first_letter(&tok);
-                                }
-                                passphrase.push_str(&tok);
-                                entropy += h;
+                        let mut nlen = 0;
+                        while nlen < 8 {
+                            let (mut tok, h) = self.gen_next_token(&passphrase).unwrap();
+                            if c == 'W' && nlen == 0 {
+                                tok = uppercase_first_letter(&tok);
                             }
+                            passphrase.push_str(&tok);
+                            entropy += h;
+                            nlen += self.depth;
                         }
                     }
                     's' | 'd' => {
@@ -246,13 +244,12 @@ impl Generator {
                         entropy += (symbols.len() as f64).log2();
                     }
                     'c' | 'C' => {
-                        if let Some((mut tok, h)) = self.gen_next_token(&passphrase) {
-                            if c == 'C' {
-                                tok = uppercase_first_letter(&tok);
-                            }
-                            passphrase.push_str(&tok);
-                            entropy += h;
+                        let (mut tok, h) = self.gen_next_token(&passphrase).unwrap();
+                        if c == 'C' {
+                            tok = uppercase_first_letter(&tok);
                         }
+                        passphrase.push_str(&tok);
+                        entropy += h;
                     }
                     _ => {
                         passphrase.push(c);
@@ -280,10 +277,10 @@ impl Generator {
     /// This example demonstrates how to generate the next token in a sequence starting with
     /// the seed `"he"`. The method returns both the token and its associated entropy.
     pub fn gen_next_token(&mut self, seed: &str) -> Option<(String, f64)> {
-        let mut tok = seed;
+        let sl = seed[seed.len().saturating_sub(self.depth)..].to_lowercase();
+        let mut tok = sl.as_str();
         loop {
-            let sub_tok = &tok[tok.len().saturating_sub(self.depth)..];
-            if let Some(tr) = self.jump_table.get(sub_tok) {
+            if let Some(tr) = self.jump_table.get(tok) {
                 let n = self.rng.gen_range(0..tr.total);
                 for (i, v) in tr.counts.iter().enumerate() {
                     if n < *v {
@@ -300,12 +297,12 @@ impl Generator {
     }
 }
 
-fn max_depth(jump_table: &HashMap<String, Distribution>) -> f64 {
-    let mut t_depth = 0.0 as f64;
+fn max_depth(jump_table: &HashMap<String, Distribution>) -> usize {
+    let mut t_depth = 0;
     for (k, v) in jump_table.iter() {
-        t_depth = t_depth.max(k.len() as f64);
+        t_depth = t_depth.max(k.len());
         for c in v.tokens.iter() {
-            t_depth = t_depth.max(c.len() as f64);
+            t_depth = t_depth.max(c.len());
         }
     }
     t_depth
@@ -335,7 +332,7 @@ fn transition_matrix_from_tokens(
         for i in 0..sb.len() {
             let from = sb[i.saturating_sub(depth)..i].into_iter().collect();
             let to = sb[i..(i + depth).min(sb.len())].into_iter().collect();
-            if to == "" {
+            if to == "" || from == to {
                 continue;
             }
             put(from, to);
